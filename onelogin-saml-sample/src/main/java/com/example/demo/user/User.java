@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -14,6 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -29,8 +31,10 @@ public class User implements Serializable {
   private static final long serialVersionUID = 7535937185214543104L;
 
   @Id
-  @GeneratedValue
-  private Long id;
+  @GeneratedValue(generator = "system-uuid")
+  @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+  @Column(length = 50)
+  private String id;
 
   private String username;
 
@@ -41,5 +45,8 @@ public class User implements Serializable {
   @Column(name = "authority", nullable = false)
   @Enumerated(EnumType.STRING)
   private Set<Authority> authorities = new HashSet<>();
+
+  @ManyToOne
+  private Company company;
 
 }

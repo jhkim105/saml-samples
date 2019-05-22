@@ -3,6 +3,7 @@ package com.example.demo.onelogin;
 import com.onelogin.saml2.Auth;
 import com.onelogin.saml2.servlet.ServletUtils;
 import com.onelogin.saml2.settings.Saml2Settings;
+import com.onelogin.saml2.settings.SettingsBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * https://developers.onelogin.com/saml/java
@@ -57,12 +59,19 @@ public class OneloginController {
   @ResponseBody
   public ResponseEntity login(HttpServletRequest request, HttpServletResponse response) {
     try {
+      Saml2Settings saml2Settings = loadSaml2Settings();
       Auth auth = new Auth(request, response);
       auth.login();
       return new ResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Saml2Settings loadSaml2Settings() {
+    Properties prop = new Properties();
+    prop.setProperty(SettingsBuilder.IDP_X509CERT_PROPERTY_KEY, "");
+    return new SettingsBuilder().fromProperties(prop).build();
   }
 
   @RequestMapping("/logout")

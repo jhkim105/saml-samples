@@ -22,7 +22,7 @@ public class AuthUser implements UserDetails {
   public static final String AUTHORITY_SEPERATOR = ",";
 
   @NonNull
-  private Long id;
+  private String id;
 
   @NonNull
   private String authority;
