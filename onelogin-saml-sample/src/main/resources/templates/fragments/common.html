@@ -10,7 +10,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>SB Admin 2 - Blank</title>
+  <title>SSO Samples</title>
 
   <!-- Custom fonts for this template-->
   <link href="/webjars/font-awesome/5.8.2/css/all.min.css" rel="stylesheet" type="text/css">
@@ -28,24 +28,24 @@
     <ul th:fragment="sidebar" class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
-      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" th:href="@{/}">
         <div class="sidebar-brand-icon rotate-n-15">
           <i class="fas fa-laugh-wink"></i>
         </div>
-        <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
+        <div class="sidebar-brand-text mx-3">SSO Samples</div>
       </a>
 
       <!-- Divider -->
       <hr class="sidebar-divider my-0">
 
 
-      <!-- Nav Item - Settings -->
+      <!-- Nav Item - OneLogin -->
       <li class="nav-item">
-        <a class="nav-link" href="@{/index}">
+        <a class="nav-link" th:href="@{/onelogin/acs}">
           <i class="fas fa-fw fa-table"></i>
-          <span>Settings</span></a>
+          <span>OneLogin</span></a>
       </li>
-
+      
       <!-- Divider -->
       <hr class="sidebar-divider d-none d-md-block">
 

@@ -68,6 +68,15 @@
       <groupId>nz.net.ultraq.thymeleaf</groupId>
       <artifactId>thymeleaf-layout-dialect</artifactId>
     </dependency>
+    <!-- onelogin -->
+    <dependency>
+      <groupId>com.onelogin</groupId>
+      <artifactId>java-saml</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <!-- //onelogin -->
+
+
     <!-- webjars -->
     <dependency>
       <groupId>org.webjars</groupId>

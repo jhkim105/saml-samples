@@ -22,7 +22,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // @formatter:off
     http
       .authorizeRequests()
-        .antMatchers("/login").permitAll()
+        .antMatchers("/login", "/onelogin/**").permitAll()
         .anyRequest().authenticated()
         .and()
         .formLogin()
