@@ -1,9 +1,13 @@
 package com.example.demo.onelogin;
 
+import com.example.demo.user.SamlSetting;
+import com.example.demo.user.User;
+import com.example.demo.user.UserRepository;
 import com.onelogin.saml2.Auth;
 import com.onelogin.saml2.servlet.ServletUtils;
 import com.onelogin.saml2.settings.Saml2Settings;
 import com.onelogin.saml2.settings.SettingsBuilder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -11,8 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,14 +36,17 @@ import java.util.Properties;
 @RequestMapping("/onelogin")
 @Controller
 @Slf4j
+@RequiredArgsConstructor
 public class OneloginController {
 
+  private final UserRepository userRepository;
 
   @RequestMapping("/metadata")
   @ResponseBody
-  public String metadata() {
+  public String metadata(@RequestParam String username, HttpServletRequest request, HttpServletResponse response) {
     try {
-      Auth auth = new Auth();
+      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Auth auth = new Auth(saml2Settings, request, response);
       Saml2Settings settings = auth.getSettings();
       settings.setSPValidationOnly(true);
       String metadata = settings.getSPMetadata();
@@ -57,10 +64,10 @@ public class OneloginController {
 
   @RequestMapping("/login")
   @ResponseBody
-  public ResponseEntity login(HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity login(@RequestParam String username,  HttpServletRequest request, HttpServletResponse response) {
     try {
-      Saml2Settings saml2Settings = loadSaml2Settings();
-      Auth auth = new Auth(request, response);
+      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Auth auth = new Auth(saml2Settings, request, response);
       auth.login();
       return new ResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
@@ -68,17 +75,34 @@ public class OneloginController {
     }
   }
 
-  private Saml2Settings loadSaml2Settings() {
+  private Saml2Settings loadSaml2Settings(String username) {
+    User user = userRepository.findByUsername(username);
     Properties prop = new Properties();
-    prop.setProperty(SettingsBuilder.IDP_X509CERT_PROPERTY_KEY, "");
+    loadSp(prop, username);
+    loadIdp(prop, user);
     return new SettingsBuilder().fromProperties(prop).build();
   }
 
+  private void loadSp(Properties prop, String username) {
+    prop.setProperty(SettingsBuilder.SP_ENTITYID_PROPERTY_KEY, "http://localhost:8080/onelogin/metadata?username=" + username);
+    prop.setProperty(SettingsBuilder.SP_ASSERTION_CONSUMER_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/acs?username=" + username);
+    prop.setProperty(SettingsBuilder.SP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/sls");
+  }
+
+  private void loadIdp(Properties prop, User user) {
+    SamlSetting samlSetting = user.getSamlSetting();
+    prop.setProperty(SettingsBuilder.IDP_ENTITYID_PROPERTY_KEY, samlSetting.getEntityId());
+    prop.setProperty(SettingsBuilder.IDP_SINGLE_SIGN_ON_SERVICE_URL_PROPERTY_KEY, samlSetting.getSsoUrl());
+    prop.setProperty(SettingsBuilder.IDP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, samlSetting.getSloUrl());
+    prop.setProperty(SettingsBuilder.IDP_X509CERT_PROPERTY_KEY, samlSetting.getCert());
+  }
+
+
   @RequestMapping("/logout")
-  @ResponseBody
-  public ResponseEntity logout(HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+  public ResponseEntity logout(@RequestParam String username,HttpServletRequest request, HttpServletResponse response, HttpSession session) {
     try {
-      Auth auth = new Auth(request, response);
+      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Auth auth = new Auth(saml2Settings, request, response);
 
       String nameId = null;
       if (session.getAttribute("nameId") != null) {
@@ -131,9 +155,10 @@ public class OneloginController {
   }
 
   @RequestMapping("/acs")
-  public String acs(HttpServletRequest request, HttpServletResponse response, Model model) {
+  public String acs(@RequestParam String username,HttpServletRequest request, HttpServletResponse response, Model model) {
     try {
-      Auth auth = new Auth(request, response);
+      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Auth auth = new Auth(saml2Settings, request, response);
       auth.processResponse();
       if (!auth.isAuthenticated()) {
         throw new RuntimeException("Not Authenticated");

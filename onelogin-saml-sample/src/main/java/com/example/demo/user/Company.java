@@ -10,6 +10,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.io.Serializable;
 
@@ -28,5 +29,8 @@ public class Company implements Serializable {
 
 
   private String name;
+
+  @OneToOne(mappedBy = "company")
+  private SamlSetting samlSetting;
 
 }

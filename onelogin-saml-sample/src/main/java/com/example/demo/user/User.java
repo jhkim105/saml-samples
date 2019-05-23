@@ -49,4 +49,7 @@ public class User implements Serializable {
   @ManyToOne
   private Company company;
 
+  public SamlSetting getSamlSetting() {
+    return getCompany().getSamlSetting();
+  }
 }

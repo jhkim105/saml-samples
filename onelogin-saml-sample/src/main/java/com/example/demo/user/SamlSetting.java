@@ -42,9 +42,6 @@ public class SamlSetting implements Serializable {
   @Lob
   private String cert;
 
-  @Column(name = "acs_url")
-  private String acsUrl;
-
   @OneToOne
   private Company company;
 
