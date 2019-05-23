@@ -86,7 +86,7 @@ public class OneloginController {
   private void loadSp(Properties prop, String username) {
     prop.setProperty(SettingsBuilder.SP_ENTITYID_PROPERTY_KEY, "http://localhost:8080/onelogin/metadata?username=" + username);
     prop.setProperty(SettingsBuilder.SP_ASSERTION_CONSUMER_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/acs?username=" + username);
-    prop.setProperty(SettingsBuilder.SP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/sls");
+    prop.setProperty(SettingsBuilder.SP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/sls?username=" + username);
   }
 
   private void loadIdp(Properties prop, User user) {
@@ -132,9 +132,10 @@ public class OneloginController {
   }
 
   @RequestMapping("/sls")
-  public void sls(HttpServletRequest request, HttpServletResponse response) {
+  public void sls(@RequestParam String username, HttpServletRequest request, HttpServletResponse response) {
     try {
-      Auth auth = new Auth(request, response);
+      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Auth auth = new Auth(saml2Settings, request, response);
       auth.processSLO();
 
       PrintWriter out = response.getWriter();
