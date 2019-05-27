@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -34,20 +35,19 @@ import java.util.Properties;
  */
 
 
-@RequestMapping("/onelogin")
+@RequestMapping("/saml")
 @Controller
 @Slf4j
 @RequiredArgsConstructor
-@Deprecated
-public class OneloginController {
+public class SamlController {
 
   private final UserRepository userRepository;
 
-  @RequestMapping("/metadata")
+  @RequestMapping("/{idp}/metadata")
   @ResponseBody
-  public String metadata(@RequestParam String username, HttpServletRequest request, HttpServletResponse response) {
+  public String metadata(@PathVariable Idp idp, @RequestParam String username, HttpServletRequest request, HttpServletResponse response) {
     try {
-      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Saml2Settings saml2Settings = loadSaml2Settings(idp, username);
       Auth auth = new Auth(saml2Settings, request, response);
       Saml2Settings settings = auth.getSettings();
       settings.setSPValidationOnly(true);
@@ -64,11 +64,11 @@ public class OneloginController {
   }
 
 
-  @RequestMapping("/login")
+  @RequestMapping("/{idp}/login")
   @ResponseBody
-  public ResponseEntity login(@RequestParam String username,  HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity login(@PathVariable Idp idp, @RequestParam String username,  HttpServletRequest request, HttpServletResponse response) {
     try {
-      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Saml2Settings saml2Settings = loadSaml2Settings(idp, username);
       Auth auth = new Auth(saml2Settings, request, response);
       auth.login();
       return new ResponseEntity(HttpStatus.OK);
@@ -77,22 +77,23 @@ public class OneloginController {
     }
   }
 
-  private Saml2Settings loadSaml2Settings(String username) {
+  private Saml2Settings loadSaml2Settings(Idp idp, String username) {
     User user = userRepository.findByUsername(username);
     Properties prop = new Properties();
-    loadSp(prop, username);
-    loadIdp(prop, user);
+    loadSp(prop, idp, username);
+    loadIdp(prop, idp, user);
     return new SettingsBuilder().fromProperties(prop).build();
   }
 
-  private void loadSp(Properties prop, String username) {
-    prop.setProperty(SettingsBuilder.SP_ENTITYID_PROPERTY_KEY, "http://localhost:8080/onelogin/metadata?username=" + username);
-    prop.setProperty(SettingsBuilder.SP_ASSERTION_CONSUMER_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/acs?username=" + username);
-    prop.setProperty(SettingsBuilder.SP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, "http://localhost:8080/onelogin/sls?username=" + username);
+  private void loadSp(Properties prop, Idp idp, String username) {
+    String idpl = idp.toString().toLowerCase();
+    prop.setProperty(SettingsBuilder.SP_ENTITYID_PROPERTY_KEY, String.format("http://localhost:8080/saml/%s/metadata?username=%s", idpl, username));
+    prop.setProperty(SettingsBuilder.SP_ASSERTION_CONSUMER_SERVICE_URL_PROPERTY_KEY, String.format("https://localhost:8443/saml/%s/acs?username=%s", idpl, username));
+    prop.setProperty(SettingsBuilder.SP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, String.format("http://localhost:8080/saml/%s/sls?username=%s", idpl, username));
   }
 
-  private void loadIdp(Properties prop, User user) {
-    SamlSetting samlSetting = user.getSamlSetting(Idp.ONELOGIN).get();
+  private void loadIdp(Properties prop, Idp idp, User user) {
+    SamlSetting samlSetting = user.getSamlSetting(idp).get();
     prop.setProperty(SettingsBuilder.IDP_ENTITYID_PROPERTY_KEY, samlSetting.getEntityId());
     prop.setProperty(SettingsBuilder.IDP_SINGLE_SIGN_ON_SERVICE_URL_PROPERTY_KEY, samlSetting.getSsoUrl());
     prop.setProperty(SettingsBuilder.IDP_SINGLE_LOGOUT_SERVICE_URL_PROPERTY_KEY, samlSetting.getSloUrl());
@@ -100,10 +101,10 @@ public class OneloginController {
   }
 
 
-  @RequestMapping("/logout")
-  public ResponseEntity logout(@RequestParam String username,HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+  @RequestMapping("/{idp}/logout")
+  public ResponseEntity logout(@PathVariable Idp idp, @RequestParam String username,HttpServletRequest request, HttpServletResponse response, HttpSession session) {
     try {
-      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Saml2Settings saml2Settings = loadSaml2Settings(idp, username);
       Auth auth = new Auth(saml2Settings, request, response);
 
       String nameId = null;
@@ -133,10 +134,10 @@ public class OneloginController {
     }
   }
 
-  @RequestMapping("/sls")
-  public void sls(@RequestParam String username, HttpServletRequest request, HttpServletResponse response) {
+  @RequestMapping("/{idp}/sls")
+  public void sls(@PathVariable Idp idp, @RequestParam String username, HttpServletRequest request, HttpServletResponse response) {
     try {
-      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Saml2Settings saml2Settings = loadSaml2Settings(idp, username);
       Auth auth = new Auth(saml2Settings, request, response);
       auth.processSLO();
 
@@ -144,7 +145,7 @@ public class OneloginController {
       List<String> errors = auth.getErrors();
       if (errors.isEmpty()) {
         out.println("<p>Sucessfully logged out</p>");
-        out.println("<a href=\"dologin.jsp\" class=\"btn btn-primary\">Login</a>");
+        out.println(String.format("<a href=\"/saml/%s/login\" class=\"btn btn-primary\">Login</a>", idp.toString().toLowerCase()));
       } else {
         out.println("<p>");
         for (String error : errors) {
@@ -157,10 +158,10 @@ public class OneloginController {
     }
   }
 
-  @RequestMapping("/acs")
-  public String acs(@RequestParam String username,HttpServletRequest request, HttpServletResponse response, Model model) {
+  @RequestMapping("/{idp}/acs")
+  public String acs(@PathVariable Idp idp, @RequestParam String username,HttpServletRequest request, HttpServletResponse response, Model model) {
     try {
-      Saml2Settings saml2Settings = loadSaml2Settings(username);
+      Saml2Settings saml2Settings = loadSaml2Settings(idp, username);
       Auth auth = new Auth(saml2Settings, request, response);
       auth.processResponse();
       if (!auth.isAuthenticated()) {
@@ -170,12 +171,13 @@ public class OneloginController {
       if (errors.isEmpty()) {
         String relayState = request.getParameter("RelayState");
         if (relayState != null && !relayState.isEmpty() && !relayState.equals(ServletUtils.getSelfRoutedURLNoQuery(request)) &&
-            !relayState.contains("/onelogin/login")) { // We don't want to be redirected to login neither
+            !relayState.contains(String.format("/%s/login", idp.toString().toLowerCase()))) { // We don't want to be redirected to login neither
           log.debug("redirect to login, relayState:{}", relayState);
           response.sendRedirect(request.getParameter("RelayState"));
         } else {
           Map<String, List<String>> attributes = auth.getAttributes();
           model.addAttribute("attributes", attributes);
+          model.addAttribute("idp", idp.getValue());
           log.debug("attributes -> {}", attributes);
           printAttribute(attributes);
         }

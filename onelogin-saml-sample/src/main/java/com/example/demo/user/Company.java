@@ -10,9 +10,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Entity
 @Table(name = "tu_company")
@@ -30,7 +33,10 @@ public class Company implements Serializable {
 
   private String name;
 
-  @OneToOne(mappedBy = "company")
-  private SamlSetting samlSetting;
+  @OneToMany(mappedBy = "company")
+  private Set<SamlSetting> samlSettings = new HashSet<>();
 
+  public Optional<SamlSetting> getSamlSetting(Idp idp) {
+    return this.samlSettings.stream().filter(o -> o.getIdp() == idp).findFirst();
+  }
 }

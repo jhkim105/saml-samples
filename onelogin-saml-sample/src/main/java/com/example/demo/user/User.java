@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -49,7 +50,7 @@ public class User implements Serializable {
   @ManyToOne
   private Company company;
 
-  public SamlSetting getSamlSetting() {
-    return getCompany().getSamlSetting();
+  public Optional<SamlSetting> getSamlSetting(Idp idp) {
+    return getCompany().getSamlSetting(idp);
   }
 }

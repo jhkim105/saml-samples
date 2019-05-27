@@ -8,15 +8,18 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "tu_saml_setting")
+@Table(name = "tu_saml_setting", uniqueConstraints = @UniqueConstraint(name = "ux_saml_idp", columnNames = {"company_id", "idp"}))
 @Getter @Setter
 @ToString
 @EqualsAndHashCode(of = "id")
@@ -30,6 +33,12 @@ public class SamlSetting implements Serializable {
   @Column(length = 50)
   private String id;
 
+  @OneToOne
+  private Company company;
+
+  @Enumerated(EnumType.STRING)
+  private Idp idp;
+
   @Column(name = "entity_id")
   private String entityId;
 
@@ -41,8 +50,5 @@ public class SamlSetting implements Serializable {
 
   @Lob
   private String cert;
-
-  @OneToOne
-  private Company company;
 
 }
