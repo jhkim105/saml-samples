@@ -176,9 +176,10 @@ public class SamlController {
           response.sendRedirect(request.getParameter("RelayState"));
         } else {
           Map<String, List<String>> attributes = auth.getAttributes();
+          log.debug("attributes -> {}", attributes);
+
           model.addAttribute("attributes", attributes);
           model.addAttribute("idp", idp.getValue());
-          log.debug("attributes -> {}", attributes);
           printAttribute(attributes);
         }
 
