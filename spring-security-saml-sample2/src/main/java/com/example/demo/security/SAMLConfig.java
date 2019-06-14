@@ -253,7 +253,8 @@ public class SAMLConfig {
 
     @Bean
     public KeyManager keyManager(KeystoreFactory keystoreFactory) {
-        KeyStore keystore = keystoreFactory.loadKeystore("classpath:/localhost.cert", "classpath:/localhost.key.der", "localhost", "");
+//        KeyStore keystore = keystoreFactory.loadKeystore("classpath:/localhost.cert", "classpath:/localhost.key.der", "localhost", "");
+        KeyStore keystore = keystoreFactory.loadKeystore("classpath:/local.cert", "classpath:/local.key.der", "localhost", "");
         return new JKSKeyManager(keystore, ImmutableMap.of("localhost", ""), "localhost");
     }
 
