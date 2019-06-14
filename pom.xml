@@ -19,7 +19,8 @@
   <url></url>
   <modules>
     <module>onelogin-saml-sample</module>
-    <module>spring-security-saml-sample</module>
+    <!--<module>spring-security-saml-sample</module>-->
+    <module>spring-security-saml-sample2</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
