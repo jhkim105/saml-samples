@@ -5,19 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.velocity.app.VelocityEngine;
-import org.opensaml.saml2.metadata.provider.HTTPMetadataProvider;
-import org.opensaml.saml2.metadata.provider.MetadataProviderException;
-import org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider;
 import org.opensaml.xml.parse.StaticBasicParserPool;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.saml.SAMLAuthenticationProvider;
@@ -30,7 +23,6 @@ import org.springframework.security.saml.SAMLWebSSOHoKProcessingFilter;
 import org.springframework.security.saml.key.JKSKeyManager;
 import org.springframework.security.saml.key.KeyManager;
 import org.springframework.security.saml.metadata.ExtendedMetadata;
-import org.springframework.security.saml.metadata.ExtendedMetadataDelegate;
 import org.springframework.security.saml.metadata.MetadataDisplayFilter;
 import org.springframework.security.saml.metadata.MetadataGenerator;
 import org.springframework.security.saml.metadata.MetadataGeneratorFilter;
@@ -55,8 +47,6 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Timer;
-import java.util.stream.Stream;
 
 /**
  *
@@ -145,64 +135,6 @@ public class SAMLConfig {
     return filter;
   }
 
-  @Bean
-  BeanFactoryPostProcessor idpMetadataLoader() {
-    return beanFactory -> {
-//      registerIdpMetadataFile(beanFactory);
-      registerIdpMetadataHttp(beanFactory);
-    };
-  }
-
-  private void registerIdpMetadataFile(ConfigurableListableBeanFactory beanFactory) {
-    PathMatchingResourcePatternResolver metadataFilesResolver = new PathMatchingResourcePatternResolver();
-    try {
-      Resource[] idpMetadataFiles = metadataFilesResolver.getResources("classpath:/idp-*.xml");
-      Stream.of(idpMetadataFiles).forEach(idpMetadataFile -> {
-        try {
-          Timer refreshTimer = new Timer(true);
-
-          ResourceBackedMetadataProvider delegate = new ResourceBackedMetadataProvider(refreshTimer, new SpringResourceWrapperOpenSAMLResource(idpMetadataFile));
-          delegate.setParserPool(parserPool());
-          ExtendedMetadata extendedMetadata = extendedMetadata().clone();
-          ExtendedMetadataDelegate provider = new ExtendedMetadataDelegate(delegate, extendedMetadata);
-          provider.setMetadataTrustCheck(true);
-          provider.setMetadataRequireSignature(false);
-          String idpFileName = idpMetadataFile.getFilename();
-          String idpName = idpFileName.substring(idpFileName.lastIndexOf("idp-") + 4, idpFileName.lastIndexOf(".xml"));
-          extendedMetadata.setAlias(idpName);
-
-          beanFactory.registerSingleton(idpName, provider);
-          log.info("Loaded Idp Metadata bean {}: {}", idpName, idpMetadataFile);
-        } catch (Exception e) {
-          throw new IllegalStateException("Unable to initialize IDP Metadata", e);
-        }
-      });
-    } catch (Exception e) {
-      throw new IllegalStateException("Unable to initialize IDP Metadata", e);
-    }
-  }
-
-  private void registerIdpMetadataHttp(ConfigurableListableBeanFactory beanFactory) {
-    String idpMetadataUrl = "https://app.onelogin.com/saml/metadata/8a41fc95-40d0-4eff-be5f-5573580e70c7";
-    Timer backgroundTaskTimer = new Timer(true);
-    HTTPMetadataProvider httpMetadataProvider;
-    try {
-      httpMetadataProvider = new HTTPMetadataProvider(backgroundTaskTimer, new HttpClient(), idpMetadataUrl);
-    } catch (MetadataProviderException e) {
-      throw new IllegalStateException("Unable to initialize IDP Metadata", e);
-    }
-    httpMetadataProvider.setParserPool(parserPool());
-    ExtendedMetadata extendedMetadata = extendedMetadata().clone();
-    extendedMetadata.setAlias("onelogin");
-    ExtendedMetadataDelegate provider = new ExtendedMetadataDelegate(httpMetadataProvider, extendedMetadata);
-    provider.setMetadataTrustCheck(false);
-    provider.setMetadataRequireSignature(false);
-    backgroundTaskTimer.purge();
-    beanFactory.registerSingleton("onelogin", provider);
-  }
-
-
-
 
   @Bean
   public ExtendedMetadata extendedMetadata() {
@@ -218,7 +150,7 @@ public class SAMLConfig {
   @Bean
   public MetadataGenerator metadataGenerator(KeyManager keyManager) {
     MetadataGenerator generator = new MetadataGenerator();
-    generator.setEntityId("localhost-demo");
+//    generator.setEntityId("localhost-demo2");
     generator.setExtendedMetadata(extendedMetadata());
     generator.setIncludeDiscoveryExtension(false);
     generator.setKeyManager(keyManager);

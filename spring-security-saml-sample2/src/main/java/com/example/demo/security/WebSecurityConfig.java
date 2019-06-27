@@ -88,7 +88,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterAfter(samlLogoutFilter, LogoutFilter.class);
         http
                 .authorizeRequests()
-                .antMatchers("/", "/error", "/saml/**", "/idpselection").permitAll()
+                .antMatchers("/", "/error", "/saml/**", "/idpselection", "/saml2/**").permitAll()
                 .anyRequest().authenticated();
         http
                 .exceptionHandling()
