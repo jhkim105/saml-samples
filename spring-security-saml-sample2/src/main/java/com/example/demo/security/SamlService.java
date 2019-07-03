@@ -31,10 +31,10 @@ public class SamlService {
 
   private final UserRepository userRepository;
 
-  public String loadIdpMetadata(String username) {
+  public String loadIdpMetadata(Idp idp, String username) {
     User user = userRepository.findByUsername(username);
     String companyDomainName = user.getCompanyDomainName();
-    String idpMetadataUrl = getMetadataUrl(user);
+    String idpMetadataUrl = getMetadataUrl(idp, user);
     Timer backgroundTaskTimer = new Timer(true);
     HTTPMetadataProvider httpMetadataProvider;
     try {
@@ -68,8 +68,8 @@ public class SamlService {
     }
   }
 
-  private String getMetadataUrl(User user) {
-    return user.getSamlSetting(Idp.ONELOGIN).get().getEntityId();
+  private String getMetadataUrl(Idp idp, User user) {
+    return user.getSamlSetting(idp).get().getEntityId();
   }
 
 

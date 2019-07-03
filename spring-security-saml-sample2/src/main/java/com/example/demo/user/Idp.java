@@ -3,7 +3,7 @@ package com.example.demo.user;
 import java.util.Arrays;
 
 public enum Idp {
-  ONELOGIN, AZURE;
+  ONELOGIN, AZURE, LINEWORKS, GOOGLE;
 
   public String getValue() {
     return this.name().toLowerCase();
