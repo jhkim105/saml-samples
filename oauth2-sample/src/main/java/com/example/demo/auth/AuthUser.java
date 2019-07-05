@@ -37,7 +37,7 @@ public class AuthUser implements UserDetails {
 
   public AuthUser(User user) {
     this.id = user.getId();
-    this.username = user.getUsername();
+    this.username = user.getEmail();
     this.password = user.getPassword();
 
     this.authorities = new HashSet<>();

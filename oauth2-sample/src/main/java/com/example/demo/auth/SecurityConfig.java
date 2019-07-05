@@ -13,7 +13,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(WebSecurity web) {
-    web.ignoring().antMatchers("/js/**", "/css/**", "/webjars/**", "/error", "/favicon.ico");
+    web.ignoring().antMatchers("/js/**", "/css/**", "/webjars/**", "/h2-console", "/favicon.ico");
   }
 
   @Override
@@ -25,7 +25,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // @formatter:off
     http
       .authorizeRequests()
-        .antMatchers("/login").permitAll()
+        .antMatchers("/login", "/signup/**").permitAll()
         .anyRequest().authenticated()
         .and()
         .formLogin()
