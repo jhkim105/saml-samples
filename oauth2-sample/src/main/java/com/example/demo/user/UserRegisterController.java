@@ -10,23 +10,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("/signup")
+@RequestMapping("/user")
 @RequiredArgsConstructor
 @Slf4j
-public class SignupController {
+public class UserRegisterController {
 
   private final UserService userService;
 
-  @GetMapping
-  public String signupForm() {
-    log.debug("/signup");
-    return "signup";
+  @GetMapping("/register")
+  public String registerForm() {
+    log.debug("/register");
+    return "user/register";
   }
 
   @PostMapping
   @ResponseBody
-  public ResponseEntity signup(SignupForm signupForm) {
-    userService.signup(signupForm);
+  public ResponseEntity register(RegisterForm registerForm) {
+    userService.register(registerForm);
     return ResponseEntity.ok().build();
   }
 

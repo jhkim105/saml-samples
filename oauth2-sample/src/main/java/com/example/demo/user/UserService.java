@@ -9,8 +9,8 @@ public class UserService {
 
   private final UserRepository userRepository;
 
-  public User signup(SignupForm signupForm) {
-    User user = signupForm.toUser();
+  public User register(RegisterForm registerForm) {
+    User user = registerForm.toUser();
     userRepository.save(user);
     return user;
   }

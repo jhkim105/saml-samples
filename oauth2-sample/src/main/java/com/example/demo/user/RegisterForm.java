@@ -7,7 +7,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class SignupForm {
+public class RegisterForm {
   private String email;
 
   private String fullName;
@@ -15,6 +15,10 @@ public class SignupForm {
   private String password;
 
   private String confirmPassword;
+
+  private Idp idp;
+
+  private String accessToken;
 
   public User toUser() {
     // @formatter:off

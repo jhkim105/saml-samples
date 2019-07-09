@@ -28,7 +28,7 @@ import java.util.Set;
 @Getter @Setter
 @ToString
 @EqualsAndHashCode(of = "id")
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User implements Serializable {
 
   private static final long serialVersionUID = 7535937185214543104L;
