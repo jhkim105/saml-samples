@@ -14,7 +14,8 @@ import java.util.Collections;
 
 public class AccessTokenTest {
 
-  private static final String CLIENT_ID = "176961205934-eu3f6o0o3ccomln7t9e53qa19lk3hqu1.apps.googleusercontent.com";
+//  private static final String CLIENT_ID = "176961205934-eu3f6o0o3ccomln7t9e53qa19lk3hqu1.apps.googleusercontent.com";
+  private static final String CLIENT_ID = "78937684060-m7tcaso7dqvfg9hs7mk0jcfopl4d0dvl.apps.googleusercontent.com";
 
   /**
    * https://developers.google.com/identity/sign-in/web/backend-auth
